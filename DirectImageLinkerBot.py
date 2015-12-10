@@ -1,10 +1,7 @@
-
 import praw
 import time
 import re
 import shelve
-
-
 
 appID = 'Removed' #This information is removed as it should not be in the public domain. The bot won't work without it, but you can replace it with your own private data
 refreshToken = 'Removed'
