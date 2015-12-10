@@ -13,9 +13,13 @@ filetypes = [".png", ".gif", ".jpg", "gifv", "jpeg"]
 doneSubmissions = []
 
 url = ""
+
 bannedsubs = shelve.open('bannedSubs', 'c') # is a dictionary
+
+
 nonreplyusers = ["directimagelinkerbot", "imgurtranscriber", "automoderator", "apicontraption"] #make sure all in lower case
-imgurRegex = re.compile("(((http|https)://)?(www\.|i\.|m\.)?imgur\.com\/[a-zA-Z0-9]{6,7}?(?!(\.jpg|\.gif|\.gifv|\.png|\.jpeg))(?=[^a-zA-Z0-9]|$| ))") #finds indirect imgur links only. What if there's more than one?
+
+imgurRegex = re.compile("(((http|https)\:\/\/)?(www\.|i\.|m\.)?imgur\.com\/[a-zA-Z0-9]{6,7}?(?!(\.jpg|\.gif|\.gifv|\.png|\.jpeg))(?=[^a-zA-Z0-9]|$| ))") #finds indirect imgur links only. What if there's more than one?
 bannedRegex = re.compile("you've been banned from /r/(.*)")
 
 def login():
@@ -32,7 +36,9 @@ r = login()
 loops = 51
 
 while True:
+
     try:
+
         loops = loops + 1
         if loops > 50:
             loops = 0
@@ -51,6 +57,7 @@ while True:
                             bannedsubs.sync()
                             msg.reply("/r/" + str(match[0]) + " has been added to my ignore list. I won't bother you again.")
                             msg.mark_as_read()
+                
 
 ############# SUBMISSIONS ############
     
@@ -61,13 +68,14 @@ while True:
                     doneSubmissions.append(submission.id)
                     if (submission.domain == "imgur.com") and not ("/a/" in submission.url) and not ("gallery" in submission.url) and (not submission.url[-4:] in filetypes):
                         
-                        if not submission.url.startswith("http://"):
+                        if not submission.url.startswith("http"):
                             url = "https://" + submission.url
                         else:
                            url = submission.url
 
                         submission.add_comment("[Here is a direct link to the submitted image for the benefit of mobile users](" + url + """.jpg)\n\n---\n[^Feedback](https://np.reddit.com/message/compose/?to=DirectImageLinkerBot) ^| [^Already ^a ^direct ^link?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/res_links) ^| [^Why ^do ^I ^exist?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/index)""")
                         print "Submission reply sent to " + submission.author.name + "!"
+
 
 ############# COMMENTS ##############
 
@@ -80,31 +88,39 @@ while True:
                 match = list(re.findall(imgurRegex, commentText))
 
                 if (len(match) > 0):
-                    if len(match) == 1: #one link in comment
-                        if not match[0][0].startswith("http://"):
-                            url = "http://" + str(match[0][0])
-                        else:
-                            url = match[0][0]
+                    
+                        athing = False #this doesn't do anything but it doesn't respond to comments wihtout it because python syntax funtimes
 
-                        if "gallery" not in match and "/a/" not in match:
-                            comment.reply("[Here is a direct link to that image for the benefit of mobile users](" + url + """.jpg)\n\n---\n\n^[Feedback](https://np.reddit.com/message/compose/?to=DirectImageLinkerBot) ^| [^Already ^a ^direct ^link?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/res_links) ^| [^Why ^do ^I ^exist?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/index)""")
+                        if len(match) == 1: #one link in comment
+                            if not match[0][0].startswith("http"):
+                                url = "https://" + str(match[0][0])
+                                print "Added 'https://' to comment at ID " + comment.id
+                            else:
+                                url = match[0][0]
+
+                            if "gallery" not in url and "/a/" not in url:
+                                comment.reply("[Here is a direct link to that image for the benefit of mobile users](" + url + """.jpg)\n\n---\n\n^[Feedback](https://np.reddit.com/message/compose/?to=DirectImageLinkerBot) ^| [^Already ^a ^direct ^link?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/res_links) ^| [^Why ^do ^I ^exist?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/index)""")
+                                print "Comment reply sent to   " + comment.author.name + "!"
+
+                        else:
+
+                            reply = ("Here are direct links to those images for the benefit of mobile users: \n\n")
+
+                            for submatch in match:
+                                if "gallery" not in submatch and "/a/" not in submatch:
+
+                                   if not submatch[0].startswith("http"):
+                                       url = "http://" + str(submatch[0])
+                                   else:
+                                       url = submatch[0]
+
+                                   reply = reply + (url + ".jpg\n\n")
+                            reply = reply + "---\n\n[^Feedback](https://np.reddit.com/message/compose/?to=DirectImageLinkerBot) ^| [^Already ^a ^direct ^link?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/res_links) ^| [^Why ^do ^I ^exist?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/index)"
+
+                            comment.reply(reply)
                             print "Comment reply sent to   " + comment.author.name + "!"
 
-                    else:
-                        reply = ("Here are direct links to those images for the benefit of mobile users: \n\n")
-
-                        for submatch in match:
-                            if "gallery" not in submatch and "/a/" not in submatch:
-                               if not submatch[0].startswith("http://"):
-                                   url = "http://" + str(submatch[0])
-                               else:
-                                   url = submatch[0]
-                               reply = reply + (url + ".jpg\n\n")
-                        reply = reply + "---\n\n[^Feedback](https://np.reddit.com/message/compose/?to=DirectImageLinkerBot) ^| [^Already ^a ^direct ^link?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/res_links) ^| [^Why ^do ^I ^exist?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/index)"
-
-                        comment.reply(reply)
-                        print "Comment reply sent to   " + comment.author.name + "!"
-
+        
         r.handler.clear_cache()
     except praw.errors.RateLimitExceeded:
         print "Rate limit exceeded!"
@@ -113,6 +129,7 @@ while True:
         pass
     except Exception,e:
         print str(e)
+
         try:
             r = login()
         except Exception,e:
