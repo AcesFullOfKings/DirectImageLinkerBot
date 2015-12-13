@@ -10,7 +10,7 @@ URI = 'Removed'
 userAgent = 'Removed'
 
 doneSubmissions = []
-nonreplyusers = ["directimagelinkerbot", "imgurtranscriber", "automoderator", "apicontraption", "masterjts"] #make sure all in lower case
+nonreplyusers = ["directimagelinkerbot", "imgurtranscriber", "automoderator", "apicontraption"] #make sure all in lower case
 bannedRegex = re.compile("you've been banned from /r/(.*)")
 bannedRegex2 = re.compile("Your ban from /r/(.*) has changed")
 bannedsubs = shelve.open('bannedSubs', 'c') # is a dictionary
