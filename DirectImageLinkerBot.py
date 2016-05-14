@@ -10,7 +10,7 @@ app_uri = ""
 user_agent = ""
 
 nonreplyusers = ["directimagelinkerbot", "imgurtranscriber", "automoderator", "apicontraption", "masterjts", "nightmirrormoon"] #make sure all in lower case
-bannedRegex = re.compile("you've been banned from /r/(.*)")
+bannedRegex = re.compile("You've been banned from participating in /r/(.*)")
 bannedRegex2 = re.compile("Your ban from /r/(.*) has changed")
 data = shelve.open("data", "c") # is a dictionary
 imgurRegex = re.compile("(((http|https)\:\/\/)?(www\.|i\.|m\.)?imgur\.com\/[a-zA-Z0-9]{6,7}?(?!(\.jpg|\.gif|\.gifv|\.png|\.jpeg))(?=[^a-zA-Z0-9]|$| ))") #finds indirect imgur links only.
@@ -18,6 +18,7 @@ filetypes = [".png", ".gif", ".jpg", "gifv", "jpeg"]
 url = ""
 short_footer = "\n\n---\n[^Feedback](https://goo.gl/ChDHYn) ^| [^Already ^a ^direct ^link?](https://goo.gl/JVo094) ^| [^Why ^do ^I ^exist?](https://goo.gl/8WwAcJ) ^| [^Source](https://goo.gl/SBWyvz)"
 footer = "\n\n---\n[^Feedback](https://np.reddit.com/message/compose/?to=DirectImageLinkBot&subject=Feedback&message=Don%27t%20forget%20to%20include%20a%20link%20to%20your/my%20comment) ^| [^Already ^a ^direct ^link?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/res_links) ^| [^Why ^do ^I ^exist?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/index)  ^| [^Source](https://github.com/Theonefoster/DirectImageLinkerBot/blob/master/DirectImageLinkerBot.py)"
+short_footer = footer
 no_shortlink_subs = {}
 
 if "banned" not in data.keys():
@@ -36,13 +37,13 @@ def login():
 r = login()
 data["loops"] = 31 #so that it checks mail on launch.
 # print ("banned from: " + str(data["banned"]))
-data['doneSubmissions'] = set()
-data['spam'] = set()
+#data['doneSubmissions'] = set()
+#data['spam'] = set()
 data.sync()
 
 def mail():
     data["loops"] = data["loops"] + 1
-    if data["loops"] > 30:
+    if data["loops"] > 10:
         data["loops"] = 0
         msgs = list(r.get_unread(unset_has_mail=False, update_user=False))
         for msg in msgs:
@@ -77,7 +78,10 @@ def submissions():
                     if not submission.url.startswith("http"):
                         url = "https://" + submission.url
                     else:
-                        url = submission.url
+                        if submission.url.startswith("http:/"):
+                            url = "https" + submission.url[4:]
+                        else:
+                            url = submission.url
                     try:
                         if submission.subreddit.display_name.lower() in no_shortlink_subs:
                             submission.add_comment("[Here is a direct link to the image OP submitted for the benefit of mobile users](" + url + ".jpg)" + footer)
@@ -144,11 +148,11 @@ def comments():
 
 while True:
     try:
+        r.handler.clear_cache()
         mail()
         comments() 
         submissions()
         data.sync()
-        r.handler.clear_cache()
     except praw.errors.RateLimitExceeded as e:
         print ("Rate limit exceeded! - " + str(e))
     except praw.errors.HTTPException as e:
