@@ -10,6 +10,8 @@ app_secret = d.app_secret
 app_uri = d.app_uri
 user_agent = d.user_agent
 
+del d
+
 nonreplyusers = ["directimagelinkerbot", "imgurtranscriber", "automoderator", "apicontraption"] #make sure all in lower case
 bannedRegex = re.compile("You've been banned from participating in /r/(.*)")
 bannedRegex2 = re.compile("Your ban from /r/(.*) has changed")
@@ -37,8 +39,7 @@ def login():
 
 r = login()
 data["loops"] = 31 #so that it checks mail on launch.
-#data['doneSubmissions'] = set()
-#data['spam'] = set()
+#data['doneSubmissions'] = set() #reset doneSubmissions
 data.sync()
 
 def mail():
