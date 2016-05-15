@@ -2,14 +2,15 @@ import praw
 import time
 import re
 import shelve
+import bot_data as d
 
-app_id = ""
-refresh_token = ""
-app_secret = ""
-app_uri = ""
-user_agent = ""
+app_id = d.app_id
+refresh_token = d.refresh_token
+app_secret = d.app_secret
+app_uri = d.app_uri
+user_agent = d.user_agent
 
-nonreplyusers = ["directimagelinkerbot", "imgurtranscriber", "automoderator", "apicontraption", "masterjts", "nightmirrormoon"] #make sure all in lower case
+nonreplyusers = ["directimagelinkerbot", "imgurtranscriber", "automoderator", "apicontraption"] #make sure all in lower case
 bannedRegex = re.compile("You've been banned from participating in /r/(.*)")
 bannedRegex2 = re.compile("Your ban from /r/(.*) has changed")
 data = shelve.open("data", "c") # is a dictionary
@@ -18,7 +19,7 @@ filetypes = [".png", ".gif", ".jpg", "gifv", "jpeg"]
 url = ""
 short_footer = "\n\n---\n[^Feedback](https://goo.gl/ChDHYn) ^| [^Already ^a ^direct ^link?](https://goo.gl/JVo094) ^| [^Why ^do ^I ^exist?](https://goo.gl/8WwAcJ) ^| [^Source](https://goo.gl/SBWyvz)"
 footer = "\n\n---\n[^Feedback](https://np.reddit.com/message/compose/?to=DirectImageLinkBot&subject=Feedback&message=Don%27t%20forget%20to%20include%20a%20link%20to%20your/my%20comment) ^| [^Already ^a ^direct ^link?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/res_links) ^| [^Why ^do ^I ^exist?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/index)  ^| [^Source](https://github.com/Theonefoster/DirectImageLinkerBot/blob/master/DirectImageLinkerBot.py)"
-short_footer = footer
+short_footer = footer #keeps tripping the spam filter so they're both the same for now
 no_shortlink_subs = {}
 
 if "banned" not in data.keys():
@@ -36,7 +37,6 @@ def login():
 
 r = login()
 data["loops"] = 31 #so that it checks mail on launch.
-# print ("banned from: " + str(data["banned"]))
 #data['doneSubmissions'] = set()
 #data['spam'] = set()
 data.sync()
@@ -112,12 +112,14 @@ def comments():
                         
                     if len(match) == 1: #one link in comment
                         if not match[0][0].startswith("http"):
-                            url = "https://" + str(match[0][0])
-                            print ("Added 'https://' to comment at ID " + comment.id)
+                            url = "https://" + match[0][0]
                         else:
-                            url = match[0][0]
+                            if match[0][0].startswith("http:/"):
+                                url = "https" + match[0][0][4:]
+                            else:
+                                url = match[0][0]
 
-                        if "gallery" not in url and "/a/" not in url:
+                        if "gallery" not in url and "/a/" not in url: 
                             try:
                                 if comment.subreddit.display_name.lower() in no_shortlink_subs:
                                     comment.reply("[Here is a direct link to your image for the benefit of mobile users](" + url + ".jpg)" + footer)
@@ -131,18 +133,22 @@ def comments():
                     elif len(match) < 10:
                         reply = ("Here are direct links to those images for the benefit of mobile users: \n\n")
                         for submatch in match:
-                            if "gallery" not in submatch[0] and "/a/" not in submatch[0]:
+                            if "gallery" not in submatch[0] and "/a/" not in submatch[0]: #what if gallery is in every match? It outputs an empty comment. TODO
                                 if not submatch[0].startswith("http"):
-                                    url = "https://" + str(submatch[0])
+                                    url = "https://" + submatch[0]
                                 else:
-                                    url = submatch[0]
+                                    if submatch[0].startswith("http:/"):
+                                        url = "https" + submatch[0][4:]
+                                    else:
+                                        url = submatch[0]   
+                                    
                                 reply = reply + (url + ".jpg\n\n")
                         if comment.subreddit.display_name.lower() in no_shortlink_subs:
                             reply += footer
                         else:
                             reply += short_footer
                         
-                        if len(reply) > 340:
+                        if len(reply) > (len(footer) + 100): #73 is len() of header ^ so this should cover there being at least 2 links
                             comment.reply(reply)
                             print ("Comment reply sent to " + comment.author.name + "!")
 
