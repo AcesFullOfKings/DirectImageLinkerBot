@@ -16,7 +16,7 @@ nonreplyusers = ["directimagelinkerbot", "imgurtranscriber", "automoderator", "a
 bannedRegex = re.compile("You've been banned from participating in /r/(.*)")
 bannedRegex2 = re.compile("Your ban from /r/(.*) has changed")
 data = shelve.open("data", "c") # is a dictionary
-imgurRegex = re.compile("(((http|https)\:\/\/)?(www\.|i\.|m\.)?imgur\.com\/[a-zA-Z0-9]{6,7}?(?!(\.jpg|\.gif|\.gifv|\.png|\.jpeg))(?=[^a-zA-Z0-9]|$| ))") #finds indirect imgur links only.
+imgurRegex = re.compile("((((http|https)\:\/\/)|^|(?<= ))(www\.|i\.|m\.)?imgur\.com\/[a-zA-Z0-9]{6,7}?(?!(\.jpg|\.gif|\.gifv|\.png|\.jpeg))(?=[^a-zA-Z0-9]|$| ))") #finds indirect imgur links only.
 filetypes = [".png", ".gif", ".jpg", "gifv", "jpeg"]
 url = ""
 short_footer = "\n\n---\n[^Feedback](https://goo.gl/ChDHYn) ^| [^Already ^a ^direct ^link?](https://goo.gl/JVo094) ^| [^Why ^do ^I ^exist?](https://goo.gl/8WwAcJ) ^| [^Source](https://goo.gl/SBWyvz)"
