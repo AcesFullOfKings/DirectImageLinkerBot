@@ -16,8 +16,8 @@ nonreplyusers = ["directimagelinkerbot", "imgurtranscriber", "automoderator", "a
 bannedRegex = re.compile("You've been banned from participating in /r/(.*)")
 bannedRegex2 = re.compile("Your ban from /r/(.*) has changed")
 data = shelve.open("data", "c") # is a dictionary
-imgurRegex = re.compile("((((http|https)\:\/\/)|^|(?<= ))(www\.|i\.|m\.)?imgur\.com\/[a-zA-Z0-9]{6,7}?(?!(\.jpg|\.gif|\.gifv|\.png|\.jpeg))(?=[^a-zA-Z0-9]|$| ))") #finds indirect imgur links only.
-filetypes = [".png", ".gif", ".jpg", "gifv", "jpeg"]
+imgurRegex = re.compile("((((http|https)\:\/\/)|^|(?<= ))(www\.|i\.|m\.)?imgur\.com\/[a-zA-Z0-9]{6,7}?(?!(\.jpg|\.gif|\.gifv|\.png|\.jpeg|\.webm))(?=[^a-zA-Z0-9]|$| |\)))") #finds indirect imgur links only.
+filetypes = [".png", ".gif", ".jpg", "gifv", "jpeg", "webm"]
 url = ""
 short_footer = "\n\n---\n[^Feedback](https://goo.gl/ChDHYn) ^| [^Already ^a ^direct ^link?](https://goo.gl/JVo094) ^| [^Why ^do ^I ^exist?](https://goo.gl/8WwAcJ) ^| [^Source](https://goo.gl/SBWyvz)"
 footer = "\n\n---\n[^Feedback](https://np.reddit.com/message/compose/?to=DirectImageLinkBot&subject=Feedback&message=Don%27t%20forget%20to%20include%20a%20link%20to%20your/my%20comment) ^| [^Already ^a ^direct ^link?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/res_links) ^| [^Why ^do ^I ^exist?](https://np.reddit.com/r/DirectImageLinkerBot/wiki/index)  ^| [^Source](https://github.com/Theonefoster/DirectImageLinkerBot/blob/master/DirectImageLinkerBot.py)"
@@ -25,7 +25,15 @@ short_footer = footer #keeps tripping the spam filter so they're both the same f
 no_shortlink_subs = {}
 
 if "banned" not in data.keys():
-    data["banned"] = set()
+    data["banned"] ={'books', 'SubredditDrama', 'Minecraft', 'history', 'japanlife', 'NASCAR', 'mylittleandysonic1', 'weareportadelaide', 'Firefighting', 'mylittlepony', 'DIY', 'funny', 'imagesofthe1990s', 'photoshopbattles', 'cycling', 'EatCheapAndHealthy', 'talesfromtechsupport', 'atheism', 'DaystromInstitute', 'gifs', 'GetMotivated', 'redditgetsdrawn', 'Denmark', 'pics', 'sunsetshimmer', 'aww', 'creepy', 'politics', 'TheSimpsons', 'EarthPorn', 'food', 'PercyJacksonRP', 'anime', 'gaming', 'Watches', 'Romania', 'PoliticalDiscussion', 'movies', 'Wishlist', 'battlestations', 'Futurology', 'weekendgunnit', 'OhCumOn', 'wtf', 'AskReddit', 'RedditMinusMods'}
+
+#data["doneSubmissions"] = set() #reset done submissions
+#data.sync()
+
+#b = {'', 'books', 'SubredditDrama', 'Minecraft', 'history', 'japanlife', 'NASCAR', 'mylittleandysonic1', 'weareportadelaide', 'Firefighting', 'mylittlepony', 'DIY', 'funny', 'imagesofthe1990s', 'photoshopbattles', 'cycling', 'EatCheapAndHealthy', 'talesfromtechsupport', 'atheism', 'DaystromInstitute', 'gifs', 'GetMotivated', 'redditgetsdrawn', 'Denmark', 'pics', 'sunsetshimmer', 'aww', 'creepy', 'politics', 'TheSimpsons', 'EarthPorn', 'food', 'PercyJacksonRP', 'anime', 'gaming', 'Watches', 'Romania', 'PoliticalDiscussion', 'movies', 'Wishlist', 'battlestations', 'Futurology', 'weekendgunnit', 'OhCumOn', 'wtf', 'AskReddit', 'RedditMinusMods'}
+#data["banned"] = b
+#data.sync()
+#input("success")
 
 print("Bot is banned from: " + str(data["banned"]))
 
@@ -44,7 +52,7 @@ data.sync()
 
 def mail():
     data["loops"] = data["loops"] + 1
-    if data["loops"] > 10:
+    if data["loops"] > 5:
         data["loops"] = 0
         msgs = list(r.get_unread(unset_has_mail=False, update_user=False))
         for msg in msgs:
@@ -55,7 +63,7 @@ def mail():
                 if not match:
                     match = re.findall(bannedRegex2, msg.subject)
                 if match:
-                    if match[0] not in data['banned']:
+                    if match[0] not in data['banned'] and msg.author is None: #subreddit ban messages have no author
                         sublist = data['banned']
                         sublist.add(str(match[0]))
                         data['banned'] = sublist
