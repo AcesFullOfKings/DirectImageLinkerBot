@@ -12,7 +12,7 @@ user_agent = d.user_agent
 
 del d
 
-nonreplyusers = ["directimagelinkerbot", "imgurtranscriber", "automoderator", "apicontraption"] #make sure all in lower case
+nonreplyusers = ["directimagelinkerbot", "imgurtranscriber", "automoderator", "apicontraption", "shitty_biden_bot", "shitty_trump_bot"] #make sure all in lower case
 bannedRegex = re.compile("You've been banned from participating in /r/(.*)")
 bannedRegex2 = re.compile("Your ban from /r/(.*) has changed")
 data = shelve.open("data", "c") # is a dictionary
