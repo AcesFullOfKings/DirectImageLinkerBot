@@ -30,7 +30,7 @@ if "banned" not in data.keys():
 #data["doneSubmissions"] = set() #reset done submissions
 #data.sync()
 
-#b = {'', 'books', 'SubredditDrama', 'Minecraft', 'history', 'japanlife', 'NASCAR', 'mylittleandysonic1', 'weareportadelaide', 'Firefighting', 'mylittlepony', 'DIY', 'funny', 'imagesofthe1990s', 'photoshopbattles', 'cycling', 'EatCheapAndHealthy', 'talesfromtechsupport', 'atheism', 'DaystromInstitute', 'gifs', 'GetMotivated', 'redditgetsdrawn', 'Denmark', 'pics', 'sunsetshimmer', 'aww', 'creepy', 'politics', 'TheSimpsons', 'EarthPorn', 'food', 'PercyJacksonRP', 'anime', 'gaming', 'Watches', 'Romania', 'PoliticalDiscussion', 'movies', 'Wishlist', 'battlestations', 'Futurology', 'weekendgunnit', 'OhCumOn', 'wtf', 'AskReddit', 'RedditMinusMods'}
+#b = set() # clear bans
 #data["banned"] = b
 #data.sync()
 #input("success")
@@ -52,7 +52,7 @@ data.sync()
 
 def mail():
     data["loops"] = data["loops"] + 1
-    if data["loops"] > 5:
+    if data["loops"] > 5: #no point checking mail every loop. 5 loops is about every 2 minutes depending on number of directimage comments sent
         data["loops"] = 0
         msgs = list(r.get_unread(unset_has_mail=False, update_user=False))
         for msg in msgs:
