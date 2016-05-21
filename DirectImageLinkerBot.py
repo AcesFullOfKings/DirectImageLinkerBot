@@ -3,6 +3,7 @@ import time
 import re
 import shelve
 import bot_data as d
+import schedule
 
 app_id = d.app_id
 refresh_token = d.refresh_token
@@ -25,15 +26,12 @@ short_footer = footer #keeps tripping the spam filter so they're both the same f
 no_shortlink_subs = {}
 
 if "banned" not in data.keys():
-    data["banned"] ={'books', 'SubredditDrama', 'Minecraft', 'history', 'japanlife', 'NASCAR', 'mylittleandysonic1', 'weareportadelaide', 'Firefighting', 'mylittlepony', 'DIY', 'funny', 'imagesofthe1990s', 'photoshopbattles', 'cycling', 'EatCheapAndHealthy', 'talesfromtechsupport', 'atheism', 'DaystromInstitute', 'gifs', 'GetMotivated', 'redditgetsdrawn', 'Denmark', 'pics', 'sunsetshimmer', 'aww', 'creepy', 'politics', 'TheSimpsons', 'EarthPorn', 'food', 'PercyJacksonRP', 'anime', 'gaming', 'Watches', 'Romania', 'PoliticalDiscussion', 'movies', 'Wishlist', 'battlestations', 'Futurology', 'weekendgunnit', 'OhCumOn', 'wtf', 'AskReddit', 'RedditMinusMods'}
+    data["banned"] = {'pics', 'Romania', 'Weakendgunnit', 'wtf', 'Watches', 'battlestations', 'aww', 'atheism', 'talesfromtechsupport', 'gaming', 'weareportadelaide', 'politics', 'OnePiece', 'imagesofthe1990s', 'totalwar', 'history', 'OhCumOn', 'Futurology', 'japanlife', 'DaystromInstitute', 'Firefighting', 'redditgetsdrawn', 'NASCAR', 'creepy', 'books', 'movies', 'EarthPorn', 'labsafety', 'food', 'Minecraft', 'dogs', 'Cardinals', 'Wishlist', 'sunsetshimmer', 'gifs', 'photoshopbattles', 'SubredditDrama', 'PercyJacksonRP', 'cycling', 'RedditMinusMods', 'PoliticalDiscussion', 'anime', 'weekendgunnit', 'Denmark', 'EatCheapAndHealthy', 'mylittleandysonic1', 'funny', 'AskReddit', 'GetMotivated', 'TheSimpsons', 'DIY', 'mylittlepony'}
+    data.sync()
 
-#data["doneSubmissions"] = set() #reset done submissions
-#data.sync()
-
-#b = set() # clear bans
-#data["banned"] = b
-#data.sync()
-#input("success")
+if "doneSubmissions" not in data.keys():
+    data["doneSubmissions"] = set()
+    data.sync()
 
 print("Bot is banned from: " + str(data["banned"]))
 
@@ -51,26 +49,23 @@ data["loops"] = 31 #so that it checks mail on launch.
 data.sync()
 
 def mail():
-    data["loops"] = data["loops"] + 1
-    if data["loops"] > 5: #no point checking mail every loop. 5 loops is about every 2 minutes depending on number of directimage comments sent
-        data["loops"] = 0
-        msgs = list(r.get_unread(unset_has_mail=False, update_user=False))
-        for msg in msgs:
-            if msg.author is not None and msg.author.name == "AutoModerator":
-                msg.mark_as_read()
-            else:
-                match = re.findall(bannedRegex, msg.subject)
-                if not match:
-                    match = re.findall(bannedRegex2, msg.subject)
-                if match:
-                    if match[0] not in data['banned'] and msg.author is None: #subreddit ban messages have no author
-                        sublist = data['banned']
-                        sublist.add(str(match[0]))
-                        data['banned'] = sublist
-                        data.sync()
-                        msg.reply("/r/" + str(match[0]) + " has been added to my ignore list. I won't bother you again.")
-                        msg.mark_as_read()
-                        print ("Added /r/" +  str(match[0]) + " to ignore list.")
+    msgs = list(r.get_unread(unset_has_mail=False, update_user=False))
+    for msg in msgs:
+        if msg.author is not None and msg.author.name == "AutoModerator":
+            msg.mark_as_read()
+        else:
+            match = re.findall(bannedRegex, msg.subject)
+            if not match:
+                match = re.findall(bannedRegex2, msg.subject)
+            if match:
+                if match[0] not in data['banned'] and msg.author is None: #subreddit ban messages have no author
+                    sublist = data['banned']
+                    sublist.add(str(match[0]))
+                    data['banned'] = sublist
+                    data.sync()
+                    msg.reply("/r/" + str(match[0]) + " has been added to my ignore list. I won't bother you again.")
+                    msg.mark_as_read()
+                    print ("Added /r/" +  str(match[0]) + " to ignore list.")
 
 def submissions():
     submissions = list(r.get_new(limit=100)) #4 per second
@@ -161,10 +156,21 @@ def comments():
                             comment.reply(reply)
                             print ("Comment reply sent to " + comment.author.name + "!")
 
+def clear_set():
+    data["doneSubmissions"] = set()
+    data.sync()
+    time.sleep(30) 
+
+#schedule.every(1).hours.do(clear_set)
+
 while True:
     try:
         r.handler.clear_cache()
-        mail()
+        data["loops"] = data["loops"] + 1
+        if data["loops"] > 6: #no point checking mail every loop. 6 loops is about every 2 minutes depending on number of directimage comments sent
+            data["loops"] = 0
+            mail()
+            schedule.run_pending()
         comments() 
         submissions()
         data.sync()
